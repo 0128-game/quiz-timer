@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>クイズ用クイックタイマー</title>
+    <title>クイズ用タイマー＆ストップウォッチ</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            height: 100vh;
+            align-items: center;
+            min-height: 100vh;
             margin: 0;
             background-color: #f0f2f5;
+        }
+        .main-wrapper {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .container {
             text-align: center;
@@ -21,22 +26,34 @@
             padding: 2rem;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 350px;
         }
-        #display {
-            font-size: 8rem;
+        .display {
+            font-size: 5rem;
             font-weight: bold;
             margin: 20px 0;
             color: #333;
+            font-variant-numeric: tabular-nums;
+            height: 1.2em; /* 表示切替時のガタつき防止 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #sw-display {
+            font-size: 3.5rem;
+            color: #007bff;
         }
         .button-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
-            margin-bottom: 20px;
+        }
+        .timer-grid {
+            grid-template-columns: repeat(3, 1fr);
         }
         button {
-            padding: 15px 20px;
-            font-size: 1.2rem;
+            padding: 12px;
+            font-size: 1rem;
             cursor: pointer;
             border: none;
             border-radius: 10px;
@@ -44,78 +61,117 @@
             color: white;
             transition: transform 0.1s, background-color 0.2s;
         }
-        button:hover {
-            background-color: #0056b3;
-        }
-        button:active {
-            transform: scale(0.95);
-        }
-        .stop-btn {
-            background-color: #dc3545;
-            width: 100%;
-            grid-column: span 5;
-        }
-        .stop-btn:hover {
-            background-color: #a71d2a;
-        }
-        /* タイムアップ時のアニメーション */
+        button:hover { background-color: #0056b3; }
+        button:active { transform: scale(0.95); }
+        
+        .stop-btn { background-color: #dc3545; grid-column: span 3; }
+        .sw-start { background-color: #28a745; }
+        .sw-stop { background-color: #fd7e14; }
+        .sw-reset { background-color: #6c757d; grid-column: span 2; }
+
         .time-up {
             color: #dc3545 !important;
             animation: blink 0.5s infinite;
         }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Quiz Timer</h2>
-    <div id="display">00</div>
-    
-    <div class="button-grid">
-        <button onclick="startTimer(10)">10秒</button>
-        <button onclick="startTimer(20)">20秒</button>
-        <button onclick="startTimer(30)">30秒</button>
-        <button onclick="startTimer(40)">40秒</button>
-        <button onclick="startTimer(50)">50秒</button>
-        <button class="stop-btn" onclick="stopTimer()">リセット / 停止</button>
+<div class="main-wrapper">
+    <div class="container">
+        <h2>Timer</h2>
+        <div id="display" class="display">00</div>
+        <div class="button-grid timer-grid">
+            <button onclick="startTimer(10)">10s</button>
+            <button onclick="startTimer(30)">30s</button>
+            <button onclick="startTimer(60)">60s</button>
+            <button class="stop-btn" onclick="stopTimer()">タイマー停止/リセット</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Stopwatch</h2>
+        <div id="sw-display" class="display">00:00.00</div>
+        <div class="button-grid">
+            <button class="sw-start" onclick="startSW()">スタート</button>
+            <button class="sw-stop" onclick="stopSW()">ストップ</button>
+            <button class="sw-reset" onclick="resetSW()">リセット</button>
+        </div>
     </div>
 </div>
 
 <script>
-    let countdown;
-    const display = document.getElementById('display');
+    /* --- タイマー --- */
+    let timerInterval;
+    const timerDisplay = document.getElementById('display');
 
     function startTimer(seconds) {
-        // すでに動いているタイマーをクリア
-        clearInterval(countdown);
-        display.classList.remove('time-up');
-        
+        clearInterval(timerInterval);
+        timerDisplay.classList.remove('time-up');
         let timeLeft = seconds;
-        updateDisplay(timeLeft);
-
-        countdown = setInterval(() => {
+        updateTimerDisplay(timeLeft);
+        timerInterval = setInterval(() => {
             timeLeft--;
-            updateDisplay(timeLeft);
-
+            updateTimerDisplay(timeLeft);
             if (timeLeft <= 0) {
-                clearInterval(countdown);
-                display.classList.add('time-up');
-                // ブラウザの通知音を鳴らしたい場合はここに追加可能
+                clearInterval(timerInterval);
+                timerDisplay.classList.add('time-up');
             }
         }, 1000);
     }
 
     function stopTimer() {
-        clearInterval(countdown);
-        display.classList.remove('time-up');
-        display.innerText = "00";
+        clearInterval(timerInterval);
+        timerDisplay.classList.remove('time-up');
+        timerDisplay.innerText = "00";
     }
 
-    function updateDisplay(time) {
-        display.innerText = time < 10 ? '0' + time : time;
+    function updateTimerDisplay(time) {
+        timerDisplay.innerText = time < 10 ? '0' + time : time;
+    }
+
+    /* --- ストップウォッチ --- */
+    let swInterval;
+    let startTime;
+    let elapsedTime = 0;
+    const swDisplay = document.getElementById('sw-display');
+
+    function startSW() {
+        if (swInterval) return;
+        startTime = Date.now() - elapsedTime;
+        swInterval = setInterval(updateSW, 10);
+    }
+
+    function stopSW() {
+        clearInterval(swInterval);
+        swInterval = null;
+    }
+
+    function resetSW() {
+        stopSW();
+        elapsedTime = 0;
+        swDisplay.innerText = "00:00.00";
+    }
+
+    function updateSW() {
+        elapsedTime = Date.now() - startTime;
+        
+        const totalSeconds = Math.floor(elapsedTime / 1000);
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        
+        const mStr = m.toString().padStart(2, '0');
+        const sStr = s.toString().padStart(2, '0');
+
+        // 5分（300秒）を超えたかどうかで分岐
+        if (totalSeconds < 300) {
+            const ms = Math.floor((elapsedTime % 1000) / 10);
+            const msStr = ms.toString().padStart(2, '0');
+            swDisplay.innerText = `${mStr}:${sStr}.${msStr}`;
+        } else {
+            swDisplay.innerText = `${mStr}:${sStr}`;
+        }
     }
 </script>
 
