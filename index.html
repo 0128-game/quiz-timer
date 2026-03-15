@@ -34,7 +34,7 @@
             margin: 20px 0;
             color: #333;
             font-variant-numeric: tabular-nums;
-            height: 1.2em; /* 表示切替時のガタつき防止 */
+            height: 1.2em;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -45,11 +45,15 @@
         }
         .button-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
         }
+        /* タイマー用：3列×2段 + ワイドな停止ボタン */
         .timer-grid {
             grid-template-columns: repeat(3, 1fr);
+        }
+        /* ストップウォッチ用：2列 */
+        .sw-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
         button {
             padding: 12px;
@@ -84,7 +88,10 @@
         <div id="display" class="display">00</div>
         <div class="button-grid timer-grid">
             <button onclick="startTimer(10)">10s</button>
+            <button onclick="startTimer(20)">20s</button>
             <button onclick="startTimer(30)">30s</button>
+            <button onclick="startTimer(40)">40s</button>
+            <button onclick="startTimer(50)">50s</button>
             <button onclick="startTimer(60)">60s</button>
             <button class="stop-btn" onclick="stopTimer()">タイマー停止/リセット</button>
         </div>
@@ -93,7 +100,7 @@
     <div class="container">
         <h2>Stopwatch</h2>
         <div id="sw-display" class="display">00:00.00</div>
-        <div class="button-grid">
+        <div class="button-grid sw-grid">
             <button class="sw-start" onclick="startSW()">スタート</button>
             <button class="sw-stop" onclick="stopSW()">ストップ</button>
             <button class="sw-reset" onclick="resetSW()">リセット</button>
@@ -156,20 +163,17 @@
 
     function updateSW() {
         elapsedTime = Date.now() - startTime;
-        
         const totalSeconds = Math.floor(elapsedTime / 1000);
         const m = Math.floor(totalSeconds / 60);
         const s = totalSeconds % 60;
-        
         const mStr = m.toString().padStart(2, '0');
         const sStr = s.toString().padStart(2, '0');
 
-        // 5分（300秒）を超えたかどうかで分岐
-        if (totalSeconds < 300) {
+        if (totalSeconds < 300) { // 5分(300秒)未満はミリ秒あり
             const ms = Math.floor((elapsedTime % 1000) / 10);
             const msStr = ms.toString().padStart(2, '0');
             swDisplay.innerText = `${mStr}:${sStr}.${msStr}`;
-        } else {
+        } else { // 5分以上は1秒刻み
             swDisplay.innerText = `${mStr}:${sStr}`;
         }
     }
